@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+        <title>Cipher</title>
+        <link rel="stylesheet" href="./style.css"/>
+    </head>
+    <body>
+        <div id="cipher-wrapper">
+            <canvas id="cipher" width="600" height="600"></canvas>
+            <br/>
+            <label>Cipher Letter Input</label>
+            <input id="cipher-letter-input" type="text" maxlength="1" autocomplete="off" placeholder="Cipher Letter (e.g. a)"/>
+            <br/>
+            <label>Cipher Number Input</label>
+            <input id="cipher-number-input" type="number" minlength="1" maxlength="2" autocomplete="off" autofocus="autofocus" step="1" placeholder="Cipher Number (e.g. 15)"/>
+            <br/><br/>
+            <input id="submit" type="button" value="Submit" onclick="updateInput()"/>
+            <br/><br/>
+            <span id="alert"></span>
+            <textarea id="message-area" placeholder="Complimentary text box"></textarea>
+        </div>
+        <div id="explain-wrapper">
+            <h1>Cipher</h1>
+            <p class="explain">
+                The cipher helps decode messages like 't14r13i03j02a14'.<br/>
+                To decode messages, simply break the string down into<br/>
+                sections, like 't14', 'r13', 'i03', 'j02', 'a14'. These<br/> 
+                sections tell you what to enter into the cipher. Separate<br/>
+                the letters and numbers, then enter them into the respective<br/> 
+                inputs. Click Submit, and the short arm wil show you the<br/> 
+                true letter encoded within the inputs.
+            </p>
+        </div>
+
+        <script>
+            var cipherNumberInput;
+            var cipherLetterInput
+            var lettersList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+
+            var canvas = document.getElementById('cipher');
+            var ctx = canvas.getContext('2d');
+
+            var radius = canvas.height / 2;
+            ctx.translate(radius, radius);
+            radius = radius * 0.9;
+
+            // init
+            if ((cipherNumberInput == null || cipherNumberInput == '') && (cipherLetterInput == null || cipherLetterInput == '')) {
+                // 'a' is default letter input, 0 is default number input
+                updateCipher(ctx, radius, lettersList, 'a', 0);
+            }
+
+            // checks if a string is blank, null, or undefined
+            function isBlank(str) {
+                return (!str || /^\s*$/.test(str));
+            }
+
+            // contains simple alert message logic; returns an array containing info on what data passed the tests
+            function handleAlert(inputtedLetter, inputtedNumber) {
+                var letterCorrect = null;
+                var numberCorrect = null;
+
+                // redundancy to prevent bugs
+                inputtedLetter = inputtedLetter.toString();
+
+                var alertBox = document.getElementById('alert');
+                var numIn = document.getElementById('cipher-number-input');
+                var letIn = document.getElementById('cipher-letter-input');
+
+                
+                // check if both inputs empty
+                if (isBlank(inputtedNumber.toString()) && isBlank(inputtedLetter)) {
+                    alertBox.style.color = 'rgb(255,255,255)';
+                    alertBox.innerHTML = 'Enter cipher inputs.';
+                    numIn.value = null;
+                    letIn.value = null;
+                    cipherNumberInput = null;
+                    cipherLetterInput = null;
+                    
+                    letterCorrect = false;
+                    numberCorrect = false;
+                }
+                else {
+
+                    // check if inputtedNumber is empty
+                    if (isBlank(inputtedNumber.toString())) {
+                        alertBox.style.color = 'rgb(255,255,255)';
+                        alertBox.innerHTML = 'Enter a cipher number.';
+                        numIn.value = null;
+                        cipherNumberInput = null;
+
+                        numberCorrect = false;
+                    }
+                    else {
+
+                        // check if inputtedNumber is within range
+                        if (inputtedNumber <= 25 && inputtedNumber >= 0) {
+                            
+                            numberCorrect = true;
+                        }
+                        else {
+                            alertBox.style.color = 'rgb(255,75,75)';
+                            alertBox.innerHTML = 'Please enter a number between 0 and 26.<br/>(Your message may be incorrectly formatted)';
+                            numIn.value = null;
+                            cipherNumberInput = null;
+
+                            numberCorrect = false;
+                        }
+
+                    }
+
+                    // check if inputtedLetter is empty
+                    if (isBlank(inputtedLetter)) {
+                        alertBox.style.color = 'rgb(255,75,75)';
+                        alertBox.innerHTML = 'Enter a cipher letter.';
+                        letIn.value = null;
+                        cipherLetterInput = null;
+
+                        letterCorrect = false;
+                    }
+                    else {
+
+                        // check if inputtedLetter is within the alphabet
+                        if (lettersList.indexOf(inputtedLetter) > -1) {
+
+                            letterCorrect = true;
+                        }
+                        else {
+                            alertBox.style.color = 'rgb(255,75,75)';
+                            alertBox.innerHTML = 'Enter a correct English letter. (a-z)';
+                            numIn.value = null;
+                            letIn.value = null;
+                            cipherNumberInput = null;
+                            cipherLetterInput = null;
+                            
+                            letterCorrect = false;
+                        }
+                    }
+                }
+                return [letterCorrect, numberCorrect];
+            }
+
+            // updates the cipher inputs and stores their values in variables
+            function updateInput() {
+                var numberinput = document.getElementById('cipher-number-input');
+                var letterinput = document.getElementById('cipher-letter-input');
+                
+                cipherNumberInput = numberinput.value;
+                cipherLetterInput = letterinput.value.toString();
+
+                updateCipher(ctx, radius, lettersList, cipherLetterInput, cipherNumberInput);
+            }
+
+            function updateCipher(ctx, radius, letters, inputtedLetter, inputtedNumber) {
+                drawFace(ctx, radius);
+                drawLetters(ctx, radius, letters);
+                updateArms(ctx, radius, letters, inputtedLetter, inputtedNumber);
+            }
+            
+            function drawFace(ctx, radius) {
+                var grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                grad = ctx.createRadialGradient(0,0,radius * 0.95, 0,0,radius * 1.05);
+                grad.addColorStop(0, '#222');
+                grad.addColorStop(0.5, '#333');
+                grad.addColorStop(1, '#222');
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = radius*0.1;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * 0.1, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+                }
+
+            function drawLetters(ctx, radius, letters) {
+                var ang;
+                var index = 0;
+
+                ctx.font = radius * 0.15 + "px arial";
+                ctx.textBaseline= "middle";
+                ctx.textAlign= "center";
+                for (index = 0; index <= 25; index++){
+                    ang = index * Math.PI / 13;
+                    ctx.rotate(ang);
+                    ctx.translate(0, -radius * 0.85);
+                    ctx.rotate(-ang);
+                    ctx.fillText(letters[index].toString(), 0, 0);
+                    ctx.rotate(ang);
+                    ctx.translate(0, radius * 0.85);
+                    ctx.rotate(-ang);
+                }
+
+                // numbers to aid in encoding
+                function drawReferenceNumbers(ctx, radius) {
+                    var ang;
+                    var num;
+
+                    ctx.font = radius * 0.05 + "px courier";
+                    ctx.textBaseline= "middle";
+                    ctx.textAlign = "center";
+
+                    // prepends a 0 to a single-digit number
+                    function getStrNum(num) {
+                        if (num < 10) {
+                            return ('0' + num.toString());
+                        }
+                        else {
+                            return num.toString();
+                        }
+                    }
+
+                    for (num = 0; num <= 25; num++) {
+                        ang = num * Math.PI / 13;
+                        ctx.rotate(ang);
+                        ctx.translate(0, -radius * 0.75);
+                        ctx.rotate(-ang);
+                        ctx.fillText(getStrNum(num), 0, 0);
+                        ctx.rotate(ang);
+                        ctx.translate(0, radius * 0.75);
+                        ctx.rotate(-ang);
+                    }
+
+                }
+                drawReferenceNumbers(ctx, radius);
+            }
+
+            // updates the arms' positions based off of cipher input. Also includes basic value checking for the input variables.
+            function updateArms(ctx, radius, letters, inputtedLetter, inputtedNumber){
+                var numberarm;
+                var letterarm;
+                
+                // validate inputs
+                var alerts = [];
+                alerts = handleAlert(inputtedLetter,  inputtedNumber);
+
+                // if inputs are validated
+                if (alerts[0] === true && alerts[1] === true) {
+
+                    var letterIndex;
+
+                    // check if inputted letter is within normal 26 letters
+                    if (lettersList.indexOf(inputtedLetter.toString()) > -1) {
+                        // find the index of the inputted letter in the alphabet
+                        letterIndex = lettersList.indexOf(inputtedLetter.toString().toLowerCase());
+                    }
+
+                    letterarm = letterIndex;
+                    numberarm = inputtedNumber;
+
+                    // find number of ticks that the letter arm has to move
+                    letterarm = (letterarm * (Math.PI / 13));
+
+                    // find correct angle of number arm (number arm should be `inputtedNumber` ticks ahead of letter arm)
+                    // tick = 1/26 of a circle
+                    numberarm = (numberarm * (Math.PI / 13));
+
+                    // sets the letterarm's rotation as the starting point to rotate from for the number arm
+                    // numberarm rotates relative to letterarm
+                    numberarm += letterarm;
+
+                    // draw number arm
+                    drawArm(ctx, numberarm, (radius * 0.70), (radius * 0.03));
+                    // draw letter arm
+                    drawArm(ctx, letterarm, (radius * 0.8), (radius * 0.04));
+
+                    // reset alert message
+                    document.getElementById('alert').innerText = '';
+                }
+                // if inputs aren't validated
+                else {
+                    // return, because handleAlert function handles errors
+                    return;
+                }
+            }
+
+            function drawArm(ctx, pos, length, width) {
+                ctx.beginPath();
+                ctx.lineWidth = width;
+                ctx.lineCap = "round";
+                ctx.moveTo(0,0);
+                ctx.rotate(pos);
+                ctx.lineTo(0, -length);
+                ctx.stroke();
+                ctx.rotate(-pos);
+            }
+        </script>
+    </body>
+</html>

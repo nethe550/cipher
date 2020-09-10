@@ -6,3 +6,5 @@ A proof-of-concept idea of how a cipher could be used with letters and numbers.
 
 ## Encoding
 Currently, in v0.1.0, encoding must be done manually. Simply pick a random letter, and count the letters between the random letter and the letter you're trying to encode. Put the random letter and number together, and you've successfully encoded a letter. For example, `x` can be encoded as `u03`, `j14`, `g17`, and many more. Just repeat the process for all the letters in your message and concatenate the remaining letter-number pair, like so: `t14r13i03j02a14 f17a14q01v16a03`.
+
+<img src="demo.PNG" alt="Cipher"/>
